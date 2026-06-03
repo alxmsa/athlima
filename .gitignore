@@ -1,0 +1,16 @@
+# Environnement
+.env
+.env.local
+
+# Symfony
+api/vendor/
+api/var/
+api/.env.local
+api/.env.*.local
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
