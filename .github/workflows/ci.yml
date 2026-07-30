@@ -45,16 +45,18 @@ jobs:
         working-directory: api
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      # ── 4. Configurer l'environnement de test ────────────────────────────
+# ── 4. Configurer l'environnement de test ────────────────────────────
       - name: Setup test environment
         working-directory: api
         run: |
-          cp .env .env.test.local
-          echo "APP_ENV=test" >> .env.test.local
-          echo "DATABASE_URL=mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4" >> .env.test.local
-          echo "JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem" >> .env.test.local
-          echo "JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem" >> .env.test.local
-          echo "JWT_PASSPHRASE=test" >> .env.test.local
+          cat > .env << EOF
+          APP_ENV=test
+          APP_SECRET=testsecret123
+          DATABASE_URL=mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+          JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+          JWT_PASSPHRASE=test
+          EOF
 
       # ── 5. Générer les clés JWT ───────────────────────────────────────────
       - name: Generate JWT keys
