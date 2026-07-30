@@ -1,0 +1,80 @@
+name: CI — Athlima API
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  tests:
+    name: PHPUnit Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: athlima_test
+          MYSQL_USER: athlima_user
+          MYSQL_PASSWORD: Athlima2026!
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      # ── 1. Récupérer le code ──────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Installer PHP 8.2 ─────────────────────────────────────────────
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, intl, opcache
+          coverage: none
+
+      # ── 3. Installer les dépendances Composer ────────────────────────────
+      - name: Install dependencies
+        working-directory: api
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # ── 4. Configurer l'environnement de test ────────────────────────────
+      - name: Setup test environment
+        working-directory: api
+        run: |
+          cp .env .env.test.local
+          echo "APP_ENV=test" >> .env.test.local
+          echo "DATABASE_URL=mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4" >> .env.test.local
+          echo "JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem" >> .env.test.local
+          echo "JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem" >> .env.test.local
+          echo "JWT_PASSPHRASE=test" >> .env.test.local
+
+      # ── 5. Générer les clés JWT ───────────────────────────────────────────
+      - name: Generate JWT keys
+        working-directory: api
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -out config/jwt/private.pem 2048
+          openssl rsa -in config/jwt/private.pem -pubout -out config/jwt/public.pem
+
+      # ── 6. Appliquer les migrations ───────────────────────────────────────
+      - name: Run migrations
+        working-directory: api
+        env:
+          DATABASE_URL: mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+        run: |
+          php bin/console doctrine:migrations:migrate --env=test --no-interaction
+
+      # ── 7. Lancer les tests PHPUnit ───────────────────────────────────────
+      - name: Run PHPUnit tests
+        working-directory: api
+        env:
+          DATABASE_URL: mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+        run: php bin/phpunit --testdox
