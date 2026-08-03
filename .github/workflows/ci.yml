@@ -70,9 +70,15 @@ jobs:
       # ── 6. Appliquer les migrations ───────────────────────────────────────
       - name: Run migrations
         working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
         run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
 
       # ── 7. Lancer les tests PHPUnit ───────────────────────────────────────
       - name: Run PHPUnit tests
         working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
         run: php bin/phpunit --testdox
