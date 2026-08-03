@@ -47,6 +47,7 @@ jobs:
           cat > .env << EOF
           APP_ENV=test
           APP_SECRET=testsecret123
+          DEFAULT_URI=http://localhost
           DATABASE_URL=mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
           JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
           JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
