@@ -31,7 +31,7 @@ class Serie
     private ?int $dureeSec = null;
 
     #[ORM\Column]
-    private ?bool $estPr = null;
+    private ?bool $estPr = false;
 
     #[ORM\Column]
     private ?\DateTime $createdAt = null;

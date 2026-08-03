@@ -51,6 +51,9 @@ class Exercice
     #[ORM\JoinTable(name: 'exercice_muscle')]
     private Collection $muscles;
 
+    #[ORM\ManyToOne]
+    private ?Utilisateur $createdBy = null;
+
     public function __construct()
     {
             $this->exerciceSeances = new ArrayCollection();
@@ -204,6 +207,18 @@ class Exercice
     public function removeMuscle(Muscle $muscle): static
     {
         $this->muscles->removeElement($muscle);
+        return $this;
+    }
+
+    public function getCreatedBy(): ?Utilisateur
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(?Utilisateur $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+
         return $this;
     }
     
