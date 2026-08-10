@@ -16,7 +16,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: athlima_test
+          MYSQL_DATABASE: athlima
         ports:
           - 3306:3306
         options: >-
@@ -46,7 +46,7 @@ jobs:
           APP_ENV=test
           APP_SECRET=testsecret123
           DEFAULT_URI=http://localhost
-          DATABASE_URL=mysql://root:root@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          DATABASE_URL=mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
           JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
           JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
           JWT_PASSPHRASE=test
@@ -70,7 +70,7 @@ jobs:
         working-directory: api
         env:
           APP_ENV: test
-          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
         run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
 
       # ── 7. Vider le cache ─────────────────────────────────────────────────
@@ -78,7 +78,7 @@ jobs:
         working-directory: api
         env:
           APP_ENV: test
-          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
         run: php bin/console cache:clear --env=test
 
       # ── 8. Lancer les tests PHPUnit ───────────────────────────────────────
@@ -86,5 +86,5 @@ jobs:
         working-directory: api
         env:
           APP_ENV: test
-          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
         run: php bin/phpunit --testdox
