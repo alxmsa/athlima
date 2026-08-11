@@ -45,6 +45,9 @@ class ExerciceSeance
     #[ORM\OneToMany(targetEntity: Serie::class, mappedBy: 'exerciceSeance', orphanRemoval: true)]
     private Collection $series;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $nbSeriesCible = null;
+
     public function __construct()
     {
         $this->series = new ArrayCollection();
@@ -165,6 +168,18 @@ class ExerciceSeance
                 $series->setExerciceSeance(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNbSeriesCible(): ?int
+    {
+        return $this->nbSeriesCible;
+    }
+
+    public function setNbSeriesCible(?int $nbSeriesCible): static
+    {
+        $this->nbSeriesCible = $nbSeriesCible;
 
         return $this;
     }

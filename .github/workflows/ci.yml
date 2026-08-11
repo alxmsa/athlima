@@ -16,9 +16,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: athlima_test
-          MYSQL_USER: athlima_user
-          MYSQL_PASSWORD: Athlima2026!
+          MYSQL_DATABASE: athlima
         ports:
           - 3306:3306
         options: >-
@@ -47,7 +45,8 @@ jobs:
           cat > .env << EOF
           APP_ENV=test
           APP_SECRET=testsecret123
-          DATABASE_URL=mysql://athlima_user:Athlima2026!@127.0.0.1:3306/athlima_test?serverVersion=8.0&charset=utf8mb4
+          DEFAULT_URI=http://localhost
+          DATABASE_URL=mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
           JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
           JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
           JWT_PASSPHRASE=test
@@ -66,12 +65,34 @@ jobs:
           openssl genrsa -out config/jwt/private.pem 2048
           openssl rsa -in config/jwt/private.pem -pubout -out config/jwt/public.pem
 
-      # ── 6. Appliquer les migrations ───────────────────────────────────────
+      # ── 6. Créer la base de test (suffixe _test ajouté par doctrine.yaml) ──
+      - name: Create test database
+        working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
+        run: php bin/console doctrine:database:create --env=test --if-not-exists
+
+      # ── 7. Appliquer les migrations ───────────────────────────────────────
       - name: Run migrations
         working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
         run: php bin/console doctrine:migrations:migrate --env=test --no-interaction
 
-      # ── 7. Lancer les tests PHPUnit ───────────────────────────────────────
+      # ── 8. Vider le cache ─────────────────────────────────────────────────
+      - name: Clear cache
+        working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
+        run: php bin/console cache:clear --env=test
+
+      # ── 9. Lancer les tests PHPUnit ───────────────────────────────────────
       - name: Run PHPUnit tests
         working-directory: api
+        env:
+          APP_ENV: test
+          DATABASE_URL: mysql://root:root@127.0.0.1:3306/athlima?serverVersion=8.0&charset=utf8mb4
         run: php bin/phpunit --testdox
