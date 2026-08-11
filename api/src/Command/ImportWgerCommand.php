@@ -15,7 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
     name: 'app:import-wger',
-    description: 'Importe les exercices depuis l\'API Wger',
+    description: 'Importe les exercices depuis l\'API Wger en français uniquement',
 )]
 class ImportWgerCommand extends Command
 {
@@ -29,15 +29,14 @@ class ImportWgerCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $io->title('Import des exercices depuis Wger');
+        $io->title('Import des exercices depuis Wger — Français uniquement');
 
         // ── Étape 1 : Import des catégories ──────────────────────────────────
         $io->section('1. Import des catégories');
         $categories = $this->wgerService->getCategories();
-        $categorieMap = []; // wgerId => entité Categorie
+        $categorieMap = [];
 
         foreach ($categories as $cat) {
-            // Vérifier si la catégorie existe déjà
             $existing = $this->em->getRepository(Categorie::class)
                 ->findOneBy(['nom' => $cat['name']]);
 
@@ -62,27 +61,27 @@ class ImportWgerCommand extends Command
         // ── Étape 2 : Import des muscles ─────────────────────────────────────
         $io->section('2. Import des muscles');
         $muscles = $this->wgerService->getMuscles();
-        $muscleMap = []; // wgerId => entité Muscle
+        $muscleMap = [];
 
         foreach ($muscles as $mus) {
-            // Ignorer les muscles sans nom
             $nomMuscle = $mus['name_en'] ?? '';
             if (empty(trim($nomMuscle))) {
                 continue;
             }
+
             $existing = $this->em->getRepository(Muscle::class)
-                ->findOneBy(['nom' => $mus['name_en']]);
+                ->findOneBy(['nom' => $nomMuscle]);
 
             if (!$existing) {
                 $muscle = new Muscle();
-                $muscle->setNom($mus['name_en']);
-                $muscle->setGroupeMusculaire($mus['name_en']);
+                $muscle->setNom($nomMuscle);
+                $muscle->setGroupeMusculaire($nomMuscle);
                 $muscle->setEstPrincipal(true);
                 $this->em->persist($muscle);
-                $io->text('✅ Muscle ajouté : ' . $mus['name_en']);
+                $io->text('✅ Muscle ajouté : ' . $nomMuscle);
             } else {
                 $muscle = $existing;
-                $io->text('⏭️  Muscle existant : ' . $mus['name_en']);
+                $io->text('⏭️  Muscle existant : ' . $nomMuscle);
             }
 
             $muscleMap[$mus['id']] = $muscle;
@@ -91,27 +90,32 @@ class ImportWgerCommand extends Command
         $this->em->flush();
         $io->success(count($muscles) . ' muscles traités');
 
-        // ── Étape 3 : Import des exercices ───────────────────────────────────
-        $io->section('3. Import des exercices');
+        // ── Étape 3 : Import des exercices EN FRANÇAIS UNIQUEMENT ─────────────
+        $io->section('3. Import des exercices français');
         $offset = 0;
-        $limit  = 20;
+        $limit  = 100;
         $total  = 0;
+        $ignores = 0;
 
         do {
             $exercices = $this->wgerService->getExercices($limit, $offset);
 
             foreach ($exercices as $ex) {
-                // Récupérer le nom depuis les traductions
+                // ── Chercher UNIQUEMENT la traduction française (language = 12) ──
                 $nom = '';
+                $description = '';
+
                 foreach ($ex['translations'] ?? [] as $translation) {
-                    if (in_array($translation['language'], [2, 4])) {
-                        $nom = $translation['name'];
+                    if ($translation['language'] === 12) {
+                        $nom = trim($translation['name']);
+                        $description = strip_tags($translation['description'] ?? '');
                         break;
                     }
                 }
 
-                // Ignorer les exercices sans nom
-                if (empty(trim($nom))) {
+                // Ignorer si pas de traduction française
+                if (empty($nom)) {
+                    $ignores++;
                     continue;
                 }
 
@@ -127,32 +131,27 @@ class ImportWgerCommand extends Command
                 $exercice = new Exercice();
                 $exercice->setNom($nom);
                 $exercice->setEstPublic(true);
+                $exercice->setTypeEffort('force');
                 $exercice->setCreatedAt(new \DateTime());
-                $exercice->setTypeEffort('force'); 
 
-                // Description depuis les traductions
-                foreach ($ex['translations'] ?? [] as $translation) {
-                    if (in_array($translation['language'], [2, 4]) && !empty($translation['description'])) {
-                        // Nettoyer le HTML de la description
-                        $desc = strip_tags($translation['description']);
-                        $exercice->setDescription($desc);
-                        break;
-                    }
+                // Description en français
+                if (!empty($description)) {
+                    $exercice->setDescription($description);
                 }
 
-                // Associer la catégorie
+                // Catégorie
                 if (!empty($ex['category']['id']) && isset($categorieMap[$ex['category']['id']])) {
                     $exercice->setCategorie($categorieMap[$ex['category']['id']]);
                 }
 
-                // Associer les muscles principaux
+                // Muscles principaux
                 foreach ($ex['muscles'] ?? [] as $muscleData) {
                     if (isset($muscleMap[$muscleData['id']])) {
                         $exercice->addMuscle($muscleMap[$muscleData['id']]);
                     }
                 }
 
-                // Associer les muscles secondaires
+                // Muscles secondaires
                 foreach ($ex['muscles_secondary'] ?? [] as $muscleData) {
                     if (isset($muscleMap[$muscleData['id']])) {
                         $exercice->addMuscle($muscleMap[$muscleData['id']]);
@@ -169,7 +168,7 @@ class ImportWgerCommand extends Command
 
         } while (count($exercices) === $limit);
 
-        $io->success($total . ' exercices importés avec succès !');
+        $io->success($total . ' exercices français importés ! (' . $ignores . ' ignorés — pas de traduction française)');
         return Command::SUCCESS;
     }
 }
