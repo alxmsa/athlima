@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Athlima",
+    "slug": "athlima",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1A1C22"
+    },
+    "scheme": "athlima",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.athlima.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#1A1C22"
+      },
+      "package": "com.athlima.app"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
