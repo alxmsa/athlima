@@ -6,6 +6,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { seanceService } from '../../services/api';
 import Colors from '../../constants/colors';
+import { router } from 'expo-router';
 
 export default function SeancesScreen() {
   const [seances, setSeances]     = useState([]);
@@ -123,7 +124,11 @@ export default function SeancesScreen() {
         ) : (
           <View style={styles.list}>
             {seances.map((seance) => (
-              <View key={seance.id} style={styles.card}>
+                <TouchableOpacity
+                    key={seance.id}
+                    style={styles.card}
+                    onPress={() => router.push(`/seance/${seance.id}`)}
+                >
                 {/* Infos séance */}
                 <View style={styles.cardTop}>
                   <View style={styles.cardLeft}>
@@ -161,7 +166,7 @@ export default function SeancesScreen() {
                     <Text style={[styles.actionText, { color: Colors.error }]}>Supprimer</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
