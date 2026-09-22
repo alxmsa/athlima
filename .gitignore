@@ -14,3 +14,7 @@ api/.env.*.local
 # IDE
 .idea/
 .vscode/
+
+# Claude Code
+.claude/
+CLAUDE.md
